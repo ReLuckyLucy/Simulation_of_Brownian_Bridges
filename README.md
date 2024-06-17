@@ -17,7 +17,7 @@
 
 布朗桥定义如下
 
-![Brownian_motion基本定义,](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/Brownian_motion基本定义.jpg)
+![Brownian_motion基本定义,](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/Brownian_motion.jpg)
 
 我们基于此，在代码中进行调整
 
