@@ -1,4 +1,4 @@
-#  Simulation-of-Brownian-Bridges
+#  Simulation_of_Brownian_Bridges
 
 <div align="center">
  <img alt="ollama" height="200px" src="https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/suiji.png">
