@@ -28,21 +28,21 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
         # 定义编码器（Encoder）部分
         self.encoder = nn.ModuleList([
-            DoubleConv(in_channels, 96),    # 输入通道数为in_channels，输出通道数为64
-            DoubleConv(96, 192),            # 输入通道数为64，输出通道数为128
-            DoubleConv(192, 384),           # 输入通道数为128，输出通道数为256
-            DoubleConv(384, 768)            # 输入通道数为256，输出通道数为512
+            DoubleConv(in_channels, 64),    # 输入通道数为in_channels，输出通道数为56
+            DoubleConv(64, 128),            # 输入通道数为56，输出通道数为112
+            DoubleConv(128, 256),           # 输入通道数为112，输出通道数为224
+            DoubleConv(256, 512)            # 输入通道数为224，输出通道数为448
         ])
         
         # 定义解码器（Decoder）部分
         self.decoder = nn.ModuleList([
-            nn.ConvTranspose2d(768, 384, kernel_size=2, stride=2),  # 转置卷积，将512通道映射为256通道
-            DoubleConv(768, 384),           # 输入通道数为512（来自上采样+跳跃连接），输出通道数为256
-            nn.ConvTranspose2d(384, 192, kernel_size=2, stride=2),  # 转置卷积，将256通道映射为128通道
-            DoubleConv(384, 192),           # 输入通道数为256（来自上采样+跳跃连接），输出通道数为128
-            nn.ConvTranspose2d(192, 96, kernel_size=2, stride=2),   # 转置卷积，将128通道映射为64通道
-            DoubleConv(192, 96),            # 输入通道数为128（来自上采样+跳跃连接），输出通道数为64
-            nn.ConvTranspose2d(96, out_channels, kernel_size=2, stride=2)  # 转置卷积，将64通道映射为输出通道数
+            nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2),  # 转置卷积，将448通道映射为224通道
+            DoubleConv(512, 256),           # 输入通道数为448（来自上采样+跳跃连接），输出通道数为224
+            nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2),  # 转置卷积，将224通道映射为112通道
+            DoubleConv(256, 128),           # 输入通道数为224（来自上采样+跳跃连接），输出通道数为112
+            nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2),   # 转置卷积，将112通道映射为56通道
+            DoubleConv(128, 64),            # 输入通道数为112（来自上采样+跳跃连接），输出通道数为56
+            nn.ConvTranspose2d(64, out_channels, kernel_size=2, stride=2)  # 转置卷积，将56通道映射为输出通道数
         ])
 
     def forward(self, x):
@@ -72,7 +72,6 @@ class UNet(nn.Module):
         """
         _, _, height, width = x.size()
         return nn.functional.interpolate(skip_features, size=(height, width), mode='bilinear', align_corners=True)
-
 
 # 加载MNIST数据集
 transform = transforms.Compose([
