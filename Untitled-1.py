@@ -1,51 +1,34 @@
-# %%
+import os
 import torch
 import torchvision
 from torch import nn
-from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from diffusers import DDPMScheduler, UNet2DModel
 from matplotlib import pyplot as plt
 
+# Create the output directory if it doesn't exist
+os.makedirs('output', exist_ok=True)
+
+# Define the corrupt function
+def corrupt(x, noise_amount):
+    """Add noise to the input tensor x with a given amount."""
+    noise = torch.randn_like(x) * noise_amount.view(-1, 1, 1, 1)
+    return x + noise
+
+# Device setup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}')
 
-
-# %%
-dataset = torchvision.datasets.MNIST(root="mnist/", train=True, download=True, transform=torchvision.transforms.ToTensor())
-
-# %%
+# Load dataset
+dataset = torchvision.datasets.MNIST(root="data/", train=True, download=True, transform=torchvision.transforms.ToTensor())
 train_dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 x, y = next(iter(train_dataloader))
 print('Input shape:', x.shape)
 print('Labels:', y)
-plt.imshow(torchvision.utils.make_grid(x)[0], cmap='Greys');
+plt.imshow(torchvision.utils.make_grid(x)[0], cmap='Greys')
+plt.savefig('output/input_data.png')
+plt.show()
 
-
-# %%
-def corrupt(x, amount):
-    """Corrupt the input `x` by mixing it with noise according to `amount`"""
-    noise = torch.rand_like(x)
-    amount = amount.view(-1, 1, 1, 1) # Sort shape so broadcasting works
-    return x*(1-amount) + noise*amount
-
-
-# %%
-# Plotting the input data
-fig, axs = plt.subplots(2, 1, figsize=(12, 5))
-axs[0].set_title('Input data')
-axs[0].imshow(torchvision.utils.make_grid(x)[0], cmap='Greys')
-
-# Adding noise
-amount = torch.linspace(0, 1, x.shape[0]) # Left to right -> more corruption
-noised_x = corrupt(x, amount)
-
-# Plottinf the noised version
-axs[1].set_title('Corrupted data (-- amount increases -->)')
-axs[1].imshow(torchvision.utils.make_grid(noised_x)[0], cmap='Greys');
-
-
-# %%
+# Define the BasicUNet class
 class BasicUNet(nn.Module):
     """A minimal UNet implementation."""
     def __init__(self, in_channels=1, out_channels=1):
@@ -79,91 +62,67 @@ class BasicUNet(nn.Module):
             x = self.act(l(x)) # Through the layer and the activation function
             
         return x
-
-# %%
+    
+# Initialize the network
 net = BasicUNet()
 x = torch.rand(8, 1, 28, 28)
-net(x).shape
+print('Output shape:', net(x).shape)
 
-# %%
-sum([p.numel() for p in net.parameters()])
+# Check the number of parameters in the network
+print('Number of parameters:', sum(p.numel() for p in net.parameters()))
 
-# %%
-# Dataloader (you can mess with batch size)
+# Dataloader setup
 batch_size = 128
 train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-# How many runs through the data should we do?
+# Training setup
 n_epochs = 3
-
-# Create the network
 net = BasicUNet()
 net.to(device)
-
-# Our loss finction
 loss_fn = nn.MSELoss()
-
-# The optimizer
-opt = torch.optim.Adam(net.parameters(), lr=1e-3) 
-
-# Keeping a record of the losses for later viewing
+opt = torch.optim.Adam(net.parameters(), lr=1e-3)
 losses = []
 
-# The training loop
+# Training loop
 for epoch in range(n_epochs):
-
     for x, y in train_dataloader:
-
-        # Get some data and prepare the corrupted version
-        x = x.to(device) # Data on the GPU
-        noise_amount = torch.rand(x.shape[0]).to(device) # Pick random noise amounts
-        noisy_x = corrupt(x, noise_amount) # Create our noisy x
-
-        # Get the model prediction
+        x = x.to(device)
+        noise_amount = torch.rand(x.shape[0]).to(device)
+        noisy_x = corrupt(x, noise_amount)
         pred = net(noisy_x)
-
-        # Calculate the loss
-        loss = loss_fn(pred, x) # How close is the output to the true 'clean' x?
-
-        # Backprop and update the params:
+        loss = loss_fn(pred, x)
         opt.zero_grad()
         loss.backward()
         opt.step()
-
-        # Store the loss for later
         losses.append(loss.item())
+    avg_loss = sum(losses[-len(train_dataloader):]) / len(train_dataloader)
+    print(f'Finished epoch {epoch}. Average loss for this epoch: {avg_loss:.5f}')
 
-    # Print our the average of the loss values for this epoch:
-    avg_loss = sum(losses[-len(train_dataloader):])/len(train_dataloader)
-    print(f'Finished epoch {epoch}. Average loss for this epoch: {avg_loss:05f}')
-
-# View the loss curve
+# Plot and save the loss curve
 plt.plot(losses)
-plt.ylim(0, 0.1);
-
-
-# %%
+plt.ylim(0, 0.1)
+plt.savefig('output/loss_curve.png')
+plt.show()
 
 # Fetch some data
 x, y = next(iter(train_dataloader))
-x = x[:8] # Only using the first 8 for easy plotting
+x = x[:8]
 
 # Corrupt with a range of amounts
-amount = torch.linspace(0, 1, x.shape[0]) # Left to right -> more corruption
+amount = torch.linspace(0, 1, x.shape[0])
 noised_x = corrupt(x, amount)
 
 # Get the model predictions
 with torch.no_grad():
     preds = net(noised_x.to(device)).detach().cpu()
 
-# Plot
+# Plot and save the results
 fig, axs = plt.subplots(3, 1, figsize=(12, 7))
 axs[0].set_title('Input data')
 axs[0].imshow(torchvision.utils.make_grid(x)[0].clip(0, 1), cmap='Greys')
 axs[1].set_title('Corrupted data')
 axs[1].imshow(torchvision.utils.make_grid(noised_x)[0].clip(0, 1), cmap='Greys')
 axs[2].set_title('Network Predictions')
-axs[2].imshow(torchvision.utils.make_grid(preds)[0].clip(0, 1), cmap='Greys');
-
-
-
+axs[2].imshow(torchvision.utils.make_grid(preds)[0].clip(0, 1), cmap='Greys')
+plt.savefig('output/predictions.png')
+plt.show()
