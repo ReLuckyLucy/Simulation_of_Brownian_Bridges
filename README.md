@@ -1,8 +1,9 @@
-#  Simulation_of_Brownian_Bridges
 
 <div align="center">
  <img alt="ollama" height="200px" src="https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/logo.png">
 </div>
+
+# Simulation_of_Brownian_Bridges
 基于布朗运动模型模拟的布朗桥方程式及通过神经网络构建模型进行扩散模型的布朗模拟
 
 ##  1.基于SDE方程式构建的布朗运动模拟
