@@ -68,7 +68,7 @@
 ![3d下布朗桥模型与神经网络模拟路径对比](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/6_1布朗桥模拟路径与同心圆形终点.png)
 
 ### 6_2布朗桥模拟路径与“S”形终点
-![3d下布朗桥模型与神经网络模拟路径对比](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/6_1布朗桥模拟路径与同心圆形终点.png)
+![3d下布朗桥模型与神经网络模拟路径对比](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/6_2布朗桥模拟路径与“S”形终点.png)
 
 ### 6_3布朗桥模拟路径与两个半月形终点
 ![3d下布朗桥模型与神经网络模拟路径对比](https://github.com/ReLuckyLucy/Simulation-of-Brownian-Bridges/blob/main/img/6_3布朗桥模拟路径与两个半月形终点.png)
